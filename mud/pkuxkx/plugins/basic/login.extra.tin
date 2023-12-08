@@ -60,6 +60,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
         };
     };
 
+    #if { @isTrue{$login[user][manual]} } {
+        #class login.auto-login close;
+        #delay {online.WatchDog} {#zap} {600};
+        #return;
+    };
+
     #line oneshot #action {^此ID档案已存在，请输入密码：$} {
         #if { "$login[user][passwd]" != "" } {
             xtt.Answer {$login[user][passwd]};
