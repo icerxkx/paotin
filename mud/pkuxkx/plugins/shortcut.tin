@@ -85,6 +85,12 @@ load-lib sync;
     i staff;
     i needle;
     i flute;
+    i whip;
+    i axe;
+    i spear;
+    i hammer;
+    i halberd;
+    i hook;
 
     i ring;
     i necklace;
