@@ -83,6 +83,6 @@ VAR {上次 ask 的时间}		ask.lastTime		{0};
 		#delay ask.loop.retry {ask.loop.do} {@math.Eval{$ask.CD * 4}};
 	};
 
-	#local delay {@math.Min{0; @math.Eval{$ask.lastTime + $ask.CD - @time.Now{}}}};
+	#local delay {@math.Max{0; @math.Eval{$ask.lastTime + $ask.CD - @time.Now{}}}};
 	#delay ask.loop.next {sync.Wait ask.loop.do} $delay;
 };
