@@ -1,0 +1,88 @@
+#nop vim: set filetype=tt:;
+
+/*
+本文件属于 PaoTin++ 的一部分
+===========
+PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) 享有并保留一切法律权利
+你可以在遵照 GPLv3 协议的基础之上使用、修改及重新分发本程序。
+===========
+*/
+
+#var basic_cmds_ask[META] {
+    {NAME}      {ask 队列管理}
+    {DESC}      {北侠要求，ask 必须间隔一定的时间，这对玩家编写脚本带来了困难。}
+    {AUTHOR}    {担子炮}
+    {NOTE}      {}
+    {CONFIG}    {}
+};
+
+VAR {ask 最小间隔时间} {ask.CD} {2};
+VAR {ask 队列，所有的 ask 命令都通过这个队列来排队询问} ask.askQueue {};
+
+#alias {^ask %* about %*$} {
+	#local who	{%1};
+	#local what {%2};
+
+	ask.About {%1} {%2};
+};
+
+#alias {ask.About} {
+    #local who  {%1};
+    #local what {%2};
+
+	queue.Push ask.askQueue {
+		{who}		{$who}
+		{what}		{$what}
+	};
+
+	ask.loop;
+};
+
+VAR {ask 循环是否正在工作}	ask.loop.working	{false};
+VAR {上次 ask 的时间}		ask.lastTime		{0};
+
+#alias {ask.loop} {
+	#if { @isTrue{$ask.loop.working} } {
+		#return;
+	};
+
+	#if { @queue.Size{ask.askQueue} == 0 } {
+		#var ask.loop.working {false};
+		#return;
+	};
+
+	#var ask.loop.working {true};
+
+	#alias {ask.loop.do} {
+		#local req {@queue.First{ask.askQueue}};
+
+		#local ID {|ID=ask/loop};
+
+		#class ask.loop.do open;
+
+		#line sub var #action {^你说话太快，对方听不懂，慢点说吧。{$ID}$} {
+			#class ask.loop.do kill;
+			#alias {ask.loop.done} {#0};
+			#undelay ask.loop.retry;
+			#delay ask.loop.retry {ask.loop.do} {@math.Eval{$ask.CD * 2}};
+		};
+
+		#alias {ask.loop.done} {
+			#class ask.loop.do kill;
+			queue.Shift ask.askQueue;
+			#undelay ask.loop.retry;
+			#var ask.loop.working {false};
+			#delay ask.loop.next {ask.loop} $ask.CD;
+		};
+
+		#class ask.loop.do close;
+
+		#var ask.lastTime {@time.Now{}};
+		xtt.Send ask $req[who] about $req[what];
+		sync.Wait {ask.loop.done};
+		#delay ask.loop.retry {ask.loop.do} {@math.Eval{$ask.CD * 4}};
+	};
+
+	#local delay {@math.Min{0; @math.Eval{$ask.lastTime + $ask.CD - @time.Now{}}}};
+	#delay ask.loop.next {sync.Wait ask.loop.do} $delay;
+};
