@@ -20,69 +20,69 @@ VAR {ask 最小间隔时间} {ask.CD} {2};
 VAR {ask 队列，所有的 ask 命令都通过这个队列来排队询问} ask.askQueue {};
 
 #alias {^ask %* about %*$} {
-	#local who	{%1};
-	#local what {%2};
+    #local who  {%1};
+    #local what {%2};
 
-	ask.About {%1} {%2};
+    ask.About {%1} {%2};
 };
 
 #alias {ask.About} {
     #local who  {%1};
     #local what {%2};
 
-	queue.Push ask.askQueue {
-		{who}		{$who}
-		{what}		{$what}
-	};
+    queue.Push ask.askQueue {
+        {who}       {$who}
+        {what}      {$what}
+    };
 
-	ask.loop;
+    ask.loop;
 };
 
-VAR {ask 循环是否正在工作}	ask.loop.working	{false};
-VAR {上次 ask 的时间}		ask.lastTime		{0};
+VAR {ask 循环是否正在工作}  ask.loop.working    {false};
+VAR {上次 ask 的时间}       ask.lastTime        {0};
 
 #alias {ask.loop} {
-	#if { @isTrue{$ask.loop.working} } {
-		#return;
-	};
+    #if { @isTrue{$ask.loop.working} } {
+        #return;
+    };
 
-	#if { @queue.Size{ask.askQueue} == 0 } {
-		#var ask.loop.working {false};
-		#return;
-	};
+    #if { @queue.Size{ask.askQueue} == 0 } {
+        #var ask.loop.working {false};
+        #return;
+    };
 
-	#var ask.loop.working {true};
+    #var ask.loop.working {true};
 
-	#alias {ask.loop.do} {
-		#local req {@queue.First{ask.askQueue}};
+    #alias {ask.loop.do} {
+        #local req {@queue.First{ask.askQueue}};
 
-		#local ID {|ID=ask/loop};
+        #local ID {|ID=ask/loop};
 
-		#class ask.loop.do open;
+        #class ask.loop.do open;
 
-		#line sub var #action {^你说话太快，对方听不懂，慢点说吧。{$ID}$} {
-			#class ask.loop.do kill;
-			#alias {ask.loop.done} {#0};
-			#undelay ask.loop.retry;
-			#delay ask.loop.retry {ask.loop.do} {@math.Eval{$ask.CD * 2}};
-		};
+        #line sub var #action {^你说话太快，对方听不懂，慢点说吧。{$ID}$} {
+            #class ask.loop.do kill;
+            #alias {ask.loop.done} {#0};
+            #undelay ask.loop.retry;
+            #delay ask.loop.retry {ask.loop.do} {@math.Eval{$ask.CD * 2}};
+        };
 
-		#alias {ask.loop.done} {
-			#class ask.loop.do kill;
-			queue.Shift ask.askQueue;
-			#undelay ask.loop.retry;
-			#var ask.loop.working {false};
-			#delay ask.loop.next {ask.loop} $ask.CD;
-		};
+        #alias {ask.loop.done} {
+            #class ask.loop.do kill;
+            queue.Shift ask.askQueue;
+            #undelay ask.loop.retry;
+            #var ask.loop.working {false};
+            #delay ask.loop.next {ask.loop} $ask.CD;
+        };
 
-		#class ask.loop.do close;
+        #class ask.loop.do close;
 
-		#var ask.lastTime {@time.Now{}};
-		xtt.Send ask $req[who] about $req[what];
-		sync.Wait {ask.loop.done};
-		#delay ask.loop.retry {ask.loop.do} {@math.Eval{$ask.CD * 4}};
-	};
+        #var ask.lastTime {@time.Now{}};
+        xtt.Send ask $req[who] about $req[what];
+        sync.Wait {ask.loop.done};
+        #delay ask.loop.retry {ask.loop.do} {@math.Eval{$ask.CD * 4}};
+    };
 
-	#local delay {@math.Max{0; @math.Eval{$ask.lastTime + $ask.CD - @time.Now{}}}};
-	#delay ask.loop.next {sync.Wait ask.loop.do} $delay;
+    #local delay {@math.Max{0; @math.Eval{$ask.lastTime + $ask.CD - @time.Now{}}}};
+    #delay ask.loop.next {sync.Wait ask.loop.do} $delay;
 };
