@@ -30,10 +30,10 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    ASSERT: {$size} === {3}
 // };
 #func {queue.Size} {
-	#local queue {%1};
-	#local size {0};
-	#list {$queue} {size} size;
-	#return {$size};
+    #local queue.local.queue {%1};
+    #local queue.local.size  {0};
+    #list {$queue.local.queue} {size} queue.local.size;
+    #return {$queue.local.size};
 };
 
 ///=== {
@@ -56,12 +56,12 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    ASSERT: {$b} === {0}
 // };
 #func {queue.IsEmpty} {
-	#if { @queue.Size{%1} > 0 } {
-		#return 0;
-	};
-	#else {
-		#return 1;
-	};
+    #if { @queue.Size{%1} > 0 } {
+        #return 0;
+    };
+    #else {
+        #return 1;
+    };
 };
 
 ///=== {
@@ -84,9 +84,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    ASSERT: {$v} === {foo}
 // };
 #func {queue.First} {
-	#local queue {%1};
-	#local value {${${queue}[1]}};
-	#return {$value};
+    #local queue.local.queue {%1};
+    #local queue.local.value {${${queue.local.queue}[1]}};
+    #return {$queue.local.value};
 };
 
 ///=== {
@@ -109,9 +109,9 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    ASSERT: {$v} === {baz}
 // };
 #func {queue.Last} {
-	#local queue {%1};
-	#local value {${${queue}[-1]}};
-	#return {$value};
+    #local queue.local.queue {%1};
+    #local queue.local.value {${${queue.local.queue}[-1]}};
+    #return {$queue.local.value};
 };
 
 ///=== {
@@ -141,7 +141,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //      #local _ \@queue.Push{q; { {1}{b} {2}{a} {3}{z} }};
 //
 //    ASSERT: {$q} === {{1}{{1}{f}{2}{o}{3}{o}}{2}{{1}{b}{2}{a}{3}{r}}{3}{{1}{b}{2}{a}{3}{z}}}
-//
+// };
+#func {queue.Push} {
+    #local queue.local.queue {%1};
+    #local queue.local.value {%2};
+
+    #list {$queue.local.queue} add {{$queue.local.value}};
+};
+
+///=== {
 // #@ queue.Pop <队列名称> <元素>
 //   从队列末尾取出元素。返回取出的元素。
 //
@@ -171,7 +179,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //      #local v {\@queue.Pop{q}};
 //
 //    ASSERT: {v={$v}, q=$q} === {v={{1}{b}{2}{a}{3}{z}}, q={1}{{1}{f}{2}{o}{3}{o}}{2}{{1}{b}{2}{a}{3}{r}}}
-//
+// };
+#func {queue.Pop} {
+    #local queue.local.queue {%1};
+
+    #if { @queue.Size{$queue.local.queue} == 0 } {
+        #return {};
+    };
+
+    #local queue.local.value {${${queue.local.queue}[-1]}};
+    #list {$queue.local.queue} delete {-1};
+    #return {$queue.local.value};
+};
+
+///=== {
 // #@ queue.Shift <队列名称> <元素>
 //   从队列开头取出元素。返回取出的元素。
 //
@@ -201,7 +222,20 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //      #local v {\@queue.Shift{q}};
 //
 //    ASSERT: {v={$v}, q=$q} === {v={{1}{f}{2}{o}{3}{o}}, q={1}{{1}{b}{2}{a}{3}{r}}{2}{{1}{b}{2}{a}{3}{z}}}
-//
+// };
+#func {queue.Shift} {
+    #local queue.local.queue {%1};
+
+    #if { @queue.Size{$queue.local.queue} == 0 } {
+        #return {};
+    };
+
+    #local queue.local.value {${${queue.local.queue}[+1]}};
+    #list {$queue.local.queue} delete {1};
+    #return {$queue.local.value};
+};
+
+///=== {
 // #@ queue.Unshift <队列名称> <元素>
 //   将元素推入队列开头。没有返回值。
 //
@@ -228,7 +262,15 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //      #local _ \@queue.Push{q; { {1}{b} {2}{a} {3}{z} }};
 //
 //    ASSERT: {$q} === {{1}{{1}{f}{2}{o}{3}{o}}{2}{{1}{b}{2}{a}{3}{r}}{3}{{1}{b}{2}{a}{3}{z}}}
-//
+// };
+#func {queue.Unshift} {
+    #local queue.local.queue {%1};
+    #local queue.local.value {%2};
+
+    #list {$queue.local.queue} insert {1} {$queue.local.value};
+};
+
+///=== {
 ///// 别名版队列处理：
 //
 // ## queue.Push <队列名称> <元素>
@@ -346,45 +388,7 @@ PaoTin++ © 2020~2023 的所有版权均由担子炮(dzp <danzipao@gmail.com>) �
 //    ASSERT: {$q} === {{1}{{1}{f}{2}{o}{3}{o}}{2}{{1}{b}{2}{a}{3}{r}}{3}{{1}{b}{2}{a}{3}{z}}}
 // };
 
-#func {queue.Push} {
-	#local queue {%1};
-	#local value {%2};
-
-	#list {$queue} add {{$value}};
-};
-
-#func {queue.Pop} {
-	#local queue {%1};
-
-	#if { @queue.Size{$queue} == 0 } {
-		#return {};
-	};
-
-	#local value {${${queue}[-1]}};
-	#list {$queue} delete {-1};
-	#return {$value};
-};
-
-#func {queue.Shift} {
-	#local queue {%1};
-
-	#if { @queue.Size{$queue} == 0 } {
-		#return {};
-	};
-
-	#local value {${${queue}[+1]}};
-	#list {$queue} delete {1};
-	#return {$value};
-};
-
-#func {queue.Unshift} {
-	#local queue {%1};
-	#local value {%2};
-
-	#list {$queue} insert {1} {$value};
-};
-
-#alias {queue.Push}		{#local _ @queue.Push{{%1};{%2}}};
-#alias {queue.Pop}		{#local _ @queue.Pop{{%1}}};
-#alias {queue.Shift}	{#local _ @queue.Shift{{%1}}};
-#alias {queue.Unshift}	{#local _ @queue.Unshift{{%1};{%2}}};
+#alias {queue.Push}     {#local _ @queue.Push{{%1};{%2}}};
+#alias {queue.Pop}      {#local _ @queue.Pop{{%1}}};
+#alias {queue.Shift}    {#local _ @queue.Shift{{%1}}};
+#alias {queue.Unshift}  {#local _ @queue.Unshift{{%1};{%2}}};
