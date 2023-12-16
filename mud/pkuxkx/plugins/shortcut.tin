@@ -140,6 +140,8 @@ load-lib sync;
 
 #gag {向红豆打听有关『%*』的消息。$E};
 
+#action {^请直接输入感恩之语：$E} {xtt.DisableAllCommands};
+
 #gag {^%s$};
 #action {^>%s$} {#line gag};
 #gag {^├{(─|┼)+}┤$};
